@@ -2,20 +2,39 @@
   <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
     <div class="flex justify-between items-start">
       <div>
-        <h3 class="font-bold">{{ word.en }} - {{ word.bn }}</h3>
+        <h3 class="font-bold flex items-center gap-2">
+          {{ props.word.en }} - {{ props.word.bn }}
+          <Button
+            @click="speakWord"
+            :disabled="isPlaying"
+            class="p-button-rounded p-button-text p-button-sm"
+            icon="pi pi-volume-up"
+          />
+        </h3>
         <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-          Battle: {{ word.battle }}
+          Battle: {{ props.word.battle }}
         </p>
       </div>
     </div>
     <div class="mt-2">
-      <p class="text-sm">{{ word.sentence }}</p>
-      <p class="text-sm mt-1">{{ word.bnSentence }}</p>
+      <p class="text-sm flex items-center gap-2">
+        {{ props.word.sentence }}
+        <Button
+          @click="speakSentence"
+          :disabled="isPlaying"
+          class="p-button-rounded p-button-text p-button-sm"
+          icon="pi pi-volume-up"
+        />
+      </p>
+      <p class="text-sm mt-1">{{ props.word.bnSentence }}</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useSpeechSynthesis } from "@vueuse/core";
+import Button from "primevue/button";
+
 interface Word {
   id?: number;
   battle: string;
@@ -25,7 +44,36 @@ interface Word {
   bnSentence: string;
 }
 
-defineProps<{
+const props = defineProps<{
   word: Word;
 }>();
+
+const { isPlaying } = useSpeechSynthesis(props.word.en, {
+  lang: "en-US",
+  rate: 0.9,
+  pitch: 1,
+  volume: 1,
+});
+
+const speakWord = () => {
+  const { speak } = useSpeechSynthesis(props.word.en, {
+    lang: "en-US",
+    rate: 0.9,
+    pitch: 1,
+    volume: 1,
+  });
+
+  speak();
+};
+
+const speakSentence = () => {
+  const { speak } = useSpeechSynthesis(props.word.sentence, {
+    lang: "en-US",
+    rate: 0.9,
+    pitch: 1,
+    volume: 1,
+  });
+
+  speak();
+};
 </script>
