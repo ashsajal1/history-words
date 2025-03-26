@@ -5,12 +5,7 @@
         <h3 class="font-bold flex items-center gap-2">
           {{ props.word.en }} - {{ props.word.bn }}
           <Button
-            @click="
-              () => {
-                speakWord();
-                speakBnWord();
-              }
-            "
+            @click="speakWord"
             :disabled="isPlaying"
             class="p-button-rounded p-button-text p-button-sm"
           >
@@ -26,11 +21,7 @@
       <p class="text-sm flex items-center gap-2">
         {{ props.word.sentence }}
         <Button
-          @click="
-            {
-              speakSentence(), speakBnSentence();
-            }
-          "
+          @click="speakSentence"
           :disabled="isPlaying"
           class="p-button-rounded p-button-text p-button-sm"
         >
@@ -76,14 +67,14 @@ const { isPlaying } = useSpeechSynthesis(props.word.en, {
   volume: 1,
 });
 
-const { speak: speakWord } = useSpeechSynthesis(props.word.en, {
+const { speak: speakEnWord } = useSpeechSynthesis(props.word.en, {
   lang: "en-US",
   rate: 0.9,
   pitch: 1,
   volume: 1,
 });
 
-const { speak: speakSentence } = useSpeechSynthesis(props.word.sentence, {
+const { speak: speakEnSentence } = useSpeechSynthesis(props.word.sentence, {
   lang: "en-US",
   rate: 0.9,
   pitch: 1,
@@ -103,4 +94,29 @@ const { speak: speakBnSentence } = useSpeechSynthesis(props.word.bnSentence, {
   pitch: 1,
   volume: 1,
 });
+
+const speakWord = () => {
+  speakEnWord();
+  //sleep few seconds based on word length
+  const wordLength = props.word.en.split(" ").length;
+  const sleepTime = wordLength * 0.5 * 1000;
+  setTimeout(() => {
+    speakBnWord();
+  }, sleepTime);
+  speakBnWord();
+};
+
+const speakSentence = () => {
+  // Speak English first
+  speakEnSentence();
+
+  // Calculate sleep time based on sentence length
+  const sentenceLength = props.word.sentence.split(" ").length;
+  const sleepTime = sentenceLength * 0.5 * 1000;
+
+  // Then, speak Bengali after the delay
+  setTimeout(() => {
+    speakBnSentence();
+  }, sleepTime);
+};
 </script>
