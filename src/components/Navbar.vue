@@ -11,6 +11,9 @@
             <RouterLink to="/about">
                 <Button>About</Button>
             </RouterLink>
+            <RouterLink to="/import">
+                <Button>Import json</Button>
+            </RouterLink>
         </div>
     </nav>
 </template>
