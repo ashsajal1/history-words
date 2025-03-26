@@ -18,14 +18,20 @@ export const initDB = (): Promise<IDBDatabase> => {
   });
 };
 
-export const saveToIndexedDB = async (data: any): Promise<void> => {
+export const saveToIndexedDB = async (data: any[]): Promise<void> => {
   const db = await initDB();
+  
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, 'readwrite');
     const store = transaction.objectStore(STORE_NAME);
-    const request = store.add(data);
+    
+    // Add new data without clearing existing data
+    data.forEach(item => {
+      // Use put instead of add to update existing entries
+      store.put(item);
+    });
 
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error);
   });
 };
