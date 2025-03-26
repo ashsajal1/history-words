@@ -65,12 +65,25 @@ const getWordsFromDB = async () => {
     const result = await new Promise<Word[]>((resolve, reject) => {
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
-        console.log('Raw IndexedDB result:', request.result);
-        resolve(request.result);
+        const rawData = request.result;
+        console.log('Raw IndexedDB result:', rawData);
+        
+        // Flatten the nested array structure
+        let flattenedData: Word[];
+        if (Array.isArray(rawData) && rawData.length === 1 && Array.isArray(rawData[0])) {
+          flattenedData = rawData[0];
+        } else if (Array.isArray(rawData)) {
+          flattenedData = rawData;
+        } else {
+          flattenedData = [];
+        }
+        
+        console.log('Flattened data:', flattenedData);
+        resolve(flattenedData);
       }
     });
 
-    words.value = Array.isArray(result) ? result : [];
+    words.value = result;
     console.log('Words after assignment:', words.value);
   } catch (error) {
     console.error('Error fetching words:', error);
