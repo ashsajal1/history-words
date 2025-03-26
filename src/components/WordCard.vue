@@ -99,7 +99,7 @@ const speakWord = () => {
   speakEnWord();
   //sleep few seconds based on word length
   const wordLength = props.word.en.split(" ").length;
-  const sleepTime = wordLength * 0.5 * 1000;
+  const sleepTime = wordLength * 0.5 * 1000 + 300;
   setTimeout(() => {
     speakBnWord();
   }, sleepTime);
