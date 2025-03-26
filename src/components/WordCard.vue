@@ -17,7 +17,7 @@
 
 <script setup lang="ts">
 interface Word {
-  id: number;
+  id?: number;
   battle: string;
   en: string;
   bn: string;
