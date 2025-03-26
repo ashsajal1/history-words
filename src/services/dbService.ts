@@ -95,27 +95,59 @@ export const saveToIndexedDB = async (data: Word[]): Promise<void> => {
     );
     const wordsStore = transaction.objectStore(WORDS_STORE);
     const battlesStore = transaction.objectStore(BATTLES_STORE);
+    const battlesIndex = battlesStore.index("name");
 
-    // Extract unique battles and save them
+    // Extract unique battles and save them if they don't exist
     const uniqueBattles = new Set(data.map((word) => word.battle));
-    uniqueBattles.forEach((battleName) => {
-      battlesStore.add({ name: battleName });
+    const battlePromises = Array.from(uniqueBattles).map((battleName) => {
+      return new Promise<void>((resolveInner, rejectInner) => {
+        // Check if battle already exists
+        const checkRequest = battlesIndex.get(battleName);
+
+        checkRequest.onsuccess = () => {
+          if (!checkRequest.result) {
+            // Battle doesn't exist, add it
+            const addRequest = battlesStore.add({ name: battleName });
+            addRequest.onsuccess = () => resolveInner();
+            addRequest.onerror = () => {
+              if (addRequest.error?.name === "ConstraintError") {
+                resolveInner(); // Ignore duplicate error
+              } else {
+                rejectInner(addRequest.error);
+              }
+            };
+          } else {
+            resolveInner(); // Battle already exists
+          }
+        };
+
+        checkRequest.onerror = () => rejectInner(checkRequest.error);
+      });
     });
 
-    // Save words
-    data.forEach((item) => {
-      const { id, ...wordWithoutId } = item;
-      wordsStore.add(wordWithoutId);
-    });
+    // Wait for all battle checks/additions to complete
+    Promise.all(battlePromises)
+      .then(() => {
+        // Save words
+        data.forEach((item) => {
+          const { id, ...wordWithoutId } = item;
+          wordsStore.add(wordWithoutId);
+        });
 
-    transaction.oncomplete = () => {
-      console.log(
-        `Added ${data.length} words and ${uniqueBattles.size} battles`
-      );
-      resolve();
-    };
-    transaction.onerror = (error) => {
-      console.error("Transaction error:", error);
+        transaction.oncomplete = () => {
+          console.log(
+            `Added ${data.length} words and checked ${uniqueBattles.size} battles`
+          );
+          resolve();
+        };
+      })
+      .catch((error) => {
+        console.error("Error processing battles:", error);
+        reject(error);
+      });
+
+    transaction.onerror = () => {
+      console.error("Transaction error:", transaction.error);
       reject(transaction.error);
     };
   });
