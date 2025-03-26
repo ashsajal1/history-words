@@ -72,7 +72,7 @@ interface Word {
 const words = ref<Word[]>([]);
 const battles = ref<Battle[]>([]);
 const loading = ref(true);
-const selectedBattle = ref(null);
+const selectedBattle = ref<Battle | null>(null);
 
 // Watch for changes in selected battle
 watch(selectedBattle, async (newBattle) => {
