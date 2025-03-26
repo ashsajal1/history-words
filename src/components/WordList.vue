@@ -1,6 +1,16 @@
 <template>
   <div class="p-4">
-    <h2 class="text-xl font-bold mb-4">Imported Words</h2>
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-bold">Imported Words</h2>
+      <Button
+        @click="handleDeleteDuplicates"
+        :loading="deletingDuplicates"
+        severity="danger"
+        class="p-button-sm"
+      >
+        Delete Duplicates
+      </Button>
+    </div>
 
     <!-- Battle Filter -->
     <div class="mb-4">
@@ -51,8 +61,9 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from "vue";
 import Select from "primevue/select";
+import Button from "primevue/button";
 import WordCard from "./WordCard.vue";
-import { getWordsByBattle, getAllBattles } from "../services/dbService";
+import { getWordsByBattle, getAllBattles, deleteDuplicateWords } from "../services/dbService";
 
 // Add Battle interface
 interface Battle {
@@ -73,6 +84,25 @@ const words = ref<Word[]>([]);
 const battles = ref<Battle[]>([]);
 const loading = ref(true);
 const selectedBattle = ref<Battle | null>(null);
+const deletingDuplicates = ref(false);
+
+const handleDeleteDuplicates = async () => {
+  try {
+    deletingDuplicates.value = true;
+    await deleteDuplicateWords();
+    // Refresh the word list
+    if (selectedBattle.value) {
+      const battleWords = await getWordsByBattle(selectedBattle.value.name);
+      words.value = battleWords;
+    } else {
+      await getWordsFromDB();
+    }
+  } catch (error) {
+    console.error("Error deleting duplicates:", error);
+  } finally {
+    deletingDuplicates.value = false;
+  }
+};
 
 // Watch for changes in selected battle
 watch(selectedBattle, async (newBattle) => {
