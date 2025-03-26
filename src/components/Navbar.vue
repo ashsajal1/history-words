@@ -7,18 +7,18 @@
     >
 
     <div class="flex items-center justify-between gap-2">
-      <Button rounded variant="outlined" @click="next()">
+      <Button size="small" rounded variant="outlined" @click="next()">
         <SunDim :size="20" v-if="mode === 'dark'" />
         <Moon :size="20" v-if="mode === 'light'" />
         <MonitorDot :size="16" v-if="mode === 'auto'" />{{ mode }}
       </Button>
       <RouterLink to="/settings">
-        <Button
+        <Button size="small"
           ><Settings stroke-width="1.5" :size="20"
         /></Button>
       </RouterLink>
       <RouterLink to="/import">
-        <Button><BookPlus :size="16" stroke-width="1.5" />Import json</Button>
+        <Button size="small"><BookPlus :size="16" stroke-width="1.5" />Import json</Button>
       </RouterLink>
     </div>
   </nav>
