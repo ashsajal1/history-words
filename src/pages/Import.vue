@@ -15,13 +15,33 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-
 import InputText from 'primevue/inputtext';
-
 import { saveToIndexedDB } from "../services/dbService";
+
+interface Word {
+  id: number;
+  battle: string;
+  en: string;
+  bn: string;
+  sentence: string;
+  bnSentence: string;
+}
 
 const message = ref("");
 const isError = ref(false);
+
+const validateWordData = (data: any): data is Word[] => {
+  if (!Array.isArray(data)) return false;
+  
+  return data.every(item => 
+    typeof item.id === 'number' &&
+    typeof item.battle === 'string' &&
+    typeof item.en === 'string' &&
+    typeof item.bn === 'string' &&
+    typeof item.sentence === 'string' &&
+    typeof item.bnSentence === 'string'
+  );
+};
 
 const onFileChange = async (e: InputEvent) => {
   const target = e.target as HTMLInputElement;
@@ -34,6 +54,13 @@ const onFileChange = async (e: InputEvent) => {
       const text = e.target?.result as string;
       if (text) {
         const data = JSON.parse(text);
+        
+        if (!validateWordData(data)) {
+          message.value = "Error: Invalid data format. Please check your JSON structure.";
+          isError.value = true;
+          return;
+        }
+
         await saveToIndexedDB(data);
         message.value = "Data imported successfully!";
         isError.value = false;
