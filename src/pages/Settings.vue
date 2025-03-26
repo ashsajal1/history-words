@@ -3,7 +3,7 @@
     <h1 class="text-2xl font-bold mb-6">Settings</h1>
 
     <!-- Danger Zone -->
-    <div class="border border-red-200 rounded-lg p-4 bg-red-50">
+    <div class="border border-red-200 rounded-lg p-4">
       <h2 class="text-xl font-semibold text-red-700 mb-4">Danger Zone</h2>
 
       <!-- Delete by Battle -->
