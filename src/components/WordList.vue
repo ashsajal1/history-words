@@ -61,7 +61,7 @@ interface Battle {
 }
 
 interface Word {
-  id: number;
+  id?: number;
   battle: string;
   en: string;
   bn: string;
