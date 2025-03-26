@@ -17,9 +17,6 @@
           ><Settings stroke-width="1.5" :size="20"
         /></Button>
       </RouterLink>
-      <RouterLink to="/about">
-        <Button>About</Button>
-      </RouterLink>
       <RouterLink to="/import">
         <Button>Import json</Button>
       </RouterLink>
