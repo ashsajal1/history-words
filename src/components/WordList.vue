@@ -1,38 +1,55 @@
 <template>
   <div class="p-4">
     <h2 class="text-xl font-bold mb-4">Imported Words</h2>
-    
+
     <!-- Battle Filter -->
     <div class="mb-4">
-      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-        Filter by Battle:
-      </label>
-      <select 
+      <Select
         v-model="selectedBattle"
-        class="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
+        :options="battleOptions"
+        filter
+        optionLabel="name"
+        placeholder="Select a Battle"
+        class="w-full md:w-56"
       >
-        <option value="">All Battles</option>
-        <option v-for="battle in battles" :key="battle" :value="battle">
-          {{ battle }}
-        </option>
-      </select>
+        <template #value="slotProps">
+          <div v-if="slotProps.value" class="flex items-center">
+            <div>{{ slotProps.value.name }}</div>
+          </div>
+          <span v-else>
+            {{ slotProps.placeholder }}
+          </span>
+        </template>
+        <template #option="slotProps">
+          <div class="flex items-center">
+            <div>{{ slotProps.option.name }}</div>
+          </div>
+        </template>
+      </Select>
     </div>
 
     <div v-if="loading" class="text-gray-500">Loading...</div>
-    <div v-else-if="!filteredWords.length" class="text-gray-500">No words found</div>
+    <div v-else-if="!filteredWords.length" class="text-gray-500">
+      No words found
+    </div>
     <div v-else class="grid gap-4">
       <!-- Debug info -->
       <div class="text-sm text-gray-500 mb-2">
         Total words: {{ filteredWords.length }}
       </div>
-      
+
       <!-- Word cards -->
-      <div v-for="(word, index) in filteredWords" :key="index" 
-           class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+      <div
+        v-for="(word, index) in filteredWords"
+        :key="index"
+        class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow"
+      >
         <div class="flex justify-between items-start">
           <div>
             <h3 class="font-bold">{{ word.en }} - {{ word.bn }}</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Battle: {{ word.battle }}</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              Battle: {{ word.battle }}
+            </p>
           </div>
         </div>
         <div class="mt-2">
@@ -45,7 +62,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, computed } from 'vue';
+import { ref, onMounted, watch, computed } from "vue";
+import Select from "primevue/select";
 
 interface Word {
   id: number;
@@ -58,28 +76,42 @@ interface Word {
 
 const words = ref<Word[]>([]);
 const loading = ref(true);
-const selectedBattle = ref('');
+const selectedBattle = ref(null);
 
 // Watch for changes in words array
-watch(words, (newWords) => {
-  console.log('Words updated:', newWords);
-}, { deep: true });
+watch(
+  words,
+  (newWords) => {
+    console.log("Words updated:", newWords);
+  },
+  { deep: true }
+);
 
 // Compute unique battles from words
 const battles = computed(() => {
-  const uniqueBattles = new Set(words.value.map(word => word.battle));
+  const uniqueBattles = new Set(words.value.map((word) => word.battle));
   return Array.from(uniqueBattles).sort();
+});
+
+// Transform battles into options format
+const battleOptions = computed(() => {
+  return battles.value.map((battle) => ({
+    name: battle,
+    code: battle.toLowerCase().replace(/\s+/g, "_"),
+  }));
 });
 
 // Filter words based on selected battle
 const filteredWords = computed(() => {
   if (!selectedBattle.value) return words.value;
-  return words.value.filter(word => word.battle === selectedBattle.value);
+  return words.value.filter(
+    (word) => word.battle === selectedBattle.value.name
+  );
 });
 
 const getWordsFromDB = async () => {
-  const DB_NAME = 'historyWordsDB';
-  const STORE_NAME = 'words';
+  const DB_NAME = "historyWordsDB";
+  const STORE_NAME = "words";
 
   try {
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
@@ -88,7 +120,7 @@ const getWordsFromDB = async () => {
       request.onsuccess = () => resolve(request.result);
     });
 
-    const transaction = db.transaction(STORE_NAME, 'readonly');
+    const transaction = db.transaction(STORE_NAME, "readonly");
     const store = transaction.objectStore(STORE_NAME);
     const request = store.getAll();
 
@@ -96,27 +128,31 @@ const getWordsFromDB = async () => {
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
         const rawData = request.result;
-        console.log('Raw IndexedDB result:', rawData);
-        
+        console.log("Raw IndexedDB result:", rawData);
+
         // Flatten the nested array structure
         let flattenedData: Word[];
-        if (Array.isArray(rawData) && rawData.length === 1 && Array.isArray(rawData[0])) {
+        if (
+          Array.isArray(rawData) &&
+          rawData.length === 1 &&
+          Array.isArray(rawData[0])
+        ) {
           flattenedData = rawData[0];
         } else if (Array.isArray(rawData)) {
           flattenedData = rawData;
         } else {
           flattenedData = [];
         }
-        
-        console.log('Flattened data:', flattenedData);
+
+        console.log("Flattened data:", flattenedData);
         resolve(flattenedData);
-      }
+      };
     });
 
     words.value = result;
-    console.log('Words after assignment:', words.value);
+    console.log("Words after assignment:", words.value);
   } catch (error) {
-    console.error('Error fetching words:', error);
+    console.error("Error fetching words:", error);
     words.value = [];
   } finally {
     loading.value = false;
