@@ -3,7 +3,7 @@
     class="flex items-center justify-between p-4 border-b dark:border-b-gray-700"
   >
     <RouterLink to="/" class="text-2xl font-bold select-none cursor-pointer"
-      >Logo</RouterLink
+      >BattleWords</RouterLink
     >
 
     <div class="flex items-center justify-between gap-2">
