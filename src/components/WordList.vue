@@ -2,9 +2,15 @@
   <div class="p-4">
     <h2 class="text-xl font-bold mb-4">Imported Words</h2>
     <div v-if="loading" class="text-gray-500">Loading...</div>
-    <div v-else-if="words.length === 0" class="text-gray-500">No words found</div>
+    <div v-else-if="!words || words.length === 0" class="text-gray-500">No words found</div>
     <div v-else class="grid gap-4">
-      <div v-for="word in words" :key="word.id" 
+      <!-- Debug info -->
+      <div class="text-sm text-gray-500 mb-2">
+        Total words: {{ words.length }}
+      </div>
+      
+      <!-- Word cards -->
+      <div v-for="(word, index) in words" :key="index" 
            class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
         <div class="flex justify-between items-start">
           <div>
@@ -22,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 
 interface Word {
   id: number;
@@ -35,6 +41,11 @@ interface Word {
 
 const words = ref<Word[]>([]);
 const loading = ref(true);
+
+// Watch for changes in words array
+watch(words, (newWords) => {
+  console.log('Words updated:', newWords);
+}, { deep: true });
 
 const getWordsFromDB = async () => {
   const DB_NAME = 'historyWordsDB';
@@ -53,12 +64,17 @@ const getWordsFromDB = async () => {
 
     const result = await new Promise<Word[]>((resolve, reject) => {
       request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(request.result);
+      request.onsuccess = () => {
+        console.log('Raw IndexedDB result:', request.result);
+        resolve(request.result);
+      }
     });
 
-    words.value = result;
+    words.value = Array.isArray(result) ? result : [];
+    console.log('Words after assignment:', words.value);
   } catch (error) {
     console.error('Error fetching words:', error);
+    words.value = [];
   } finally {
     loading.value = false;
   }
