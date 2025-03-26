@@ -112,7 +112,7 @@ const speakSentence = () => {
 
   // Calculate sleep time based on sentence length
   const sentenceLength = props.word.sentence.split(" ").length;
-  const sleepTime = sentenceLength * 0.5 * 1000;
+  const sleepTime = sentenceLength * 0.7 * 1000 + 500;
 
   // Then, speak Bengali after the delay
   setTimeout(() => {
