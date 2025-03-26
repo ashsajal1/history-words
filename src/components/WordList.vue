@@ -52,6 +52,7 @@
 import { ref, onMounted, watch, computed } from "vue";
 import Select from "primevue/select";
 import WordCard from "./WordCard.vue";
+import { getWordsByBattle } from "../services/dbService";
 
 interface Word {
   id: number;
@@ -66,14 +67,24 @@ const words = ref<Word[]>([]);
 const loading = ref(true);
 const selectedBattle = ref(null);
 
-// Watch for changes in words array
-watch(
-  words,
-  (newWords) => {
-    console.log("Words updated:", newWords);
-  },
-  { deep: true }
-);
+// Watch for changes in selected battle
+watch(selectedBattle, async (newBattle) => {
+  if (newBattle) {
+    try {
+      loading.value = true;
+      const battleWords = await getWordsByBattle(newBattle.name);
+      words.value = battleWords;
+    } catch (error) {
+      console.error('Error fetching battle words:', error);
+      words.value = [];
+    } finally {
+      loading.value = false;
+    }
+  } else {
+    // When no battle is selected, fetch all words
+    getWordsFromDB();
+  }
+});
 
 // Compute unique battles from words
 const battles = computed(() => {
@@ -89,56 +100,30 @@ const battleOptions = computed(() => {
   }));
 });
 
-// Filter words based on selected battle
+// Update filteredWords computed property
 const filteredWords = computed(() => {
-  if (!selectedBattle.value) return words.value;
-  return words.value.filter(
-    (word) => word.battle === selectedBattle.value.name
-  );
+  return words.value;
 });
 
 const getWordsFromDB = async () => {
-  const DB_NAME = "historyWordsDB";
-  const STORE_NAME = "words";
-
   try {
+    loading.value = true;
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open(DB_NAME);
+      const request = indexedDB.open("historyWordsDB");
       request.onerror = () => reject(request.error);
       request.onsuccess = () => resolve(request.result);
     });
 
-    const transaction = db.transaction(STORE_NAME, "readonly");
-    const store = transaction.objectStore(STORE_NAME);
+    const transaction = db.transaction("words", "readonly");
+    const store = transaction.objectStore("words");
     const request = store.getAll();
 
     const result = await new Promise<Word[]>((resolve, reject) => {
       request.onerror = () => reject(request.error);
-      request.onsuccess = () => {
-        const rawData = request.result;
-        console.log("Raw IndexedDB result:", rawData);
-
-        // Flatten the nested array structure
-        let flattenedData: Word[];
-        if (
-          Array.isArray(rawData) &&
-          rawData.length === 1 &&
-          Array.isArray(rawData[0])
-        ) {
-          flattenedData = rawData[0];
-        } else if (Array.isArray(rawData)) {
-          flattenedData = rawData;
-        } else {
-          flattenedData = [];
-        }
-
-        console.log("Flattened data:", flattenedData);
-        resolve(flattenedData);
-      };
+      request.onsuccess = () => resolve(request.result);
     });
 
     words.value = result;
-    console.log("Words after assignment:", words.value);
   } catch (error) {
     console.error("Error fetching words:", error);
     words.value = [];
