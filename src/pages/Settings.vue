@@ -11,6 +11,7 @@
         <h3 class="text-lg font-medium mb-2">Delete Words by Battle</h3>
         <div class="flex gap-4 items-start">
           <Select
+            size="small"
             v-model="selectedBattle"
             :options="battles"
             optionLabel="name"
@@ -18,6 +19,7 @@
             class="w-64"
           />
           <Button
+            size="small"
             @click="handleDeleteBattleWords"
             :loading="deletingBattle"
             severity="danger"
@@ -33,6 +35,7 @@
         <h3 class="text-lg font-medium mb-2">Delete All Words</h3>
         <div class="flex items-center gap-4">
           <Button
+            size="small"
             @click="confirmDeleteAll"
             :loading="deletingAll"
             severity="danger"
