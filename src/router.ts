@@ -4,9 +4,14 @@ import HomeView from "./pages/Home.vue";
 import AboutView from "./pages/About.vue";
 import NotFound from "./pages/NotFound.vue";
 import Import from "./pages/Import.vue";
+import Settings from "./pages/Settings.vue";
 
 const routes = [
-  { path: "/", component: HomeView },
+  {
+    path: "/",
+    component: HomeView,
+    meta: { title: "Home", description: "Explore words!" },
+  },
   {
     path: "/about",
     component: AboutView,
@@ -20,7 +25,15 @@ const routes = [
     component: Import,
     meta: {
       title: "Import JSON data.",
-      description: "Import JSON data on this page.",  
+      description: "Import JSON data on this page.",
+    },
+  },
+  {
+    path: "/settings",
+    component: Settings,
+    meta: {
+      title: "Settings",
+      description: "Change your settings on this page.",
     },
   },
   { path: "/:pathMatch(.*)*", component: NotFound },
