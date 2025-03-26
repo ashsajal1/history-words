@@ -177,37 +177,55 @@ export const deleteDuplicateWords = async (): Promise<void> => {
     request.onerror = () => reject(request.error);
     request.onsuccess = () => {
       const words: Word[] = request.result;
-      const uniqueWords = new Map<string, Word>();
-      const duplicates: number[] = [];
+      const uniqueWords = new Map<string, IDBValidKey>();
+      const duplicateKeys: IDBValidKey[] = [];
 
-      // Find duplicates based on English word
-      words.forEach((word) => {
-        const key = `${word.en.toLowerCase()}-${word.battle}`;
-        if (uniqueWords.has(key)) {
-          if (word.id) duplicates.push(word.id);
-        } else {
-          uniqueWords.set(key, word);
-        }
-      });
+      // Get all keys first
+      const getAllKeysRequest = store.getAllKeys();
+      getAllKeysRequest.onerror = () => reject(getAllKeysRequest.error);
+      getAllKeysRequest.onsuccess = () => {
+        const keys = getAllKeysRequest.result;
 
-      // Delete duplicates
-      const deletePromises = duplicates.map((id) => {
-        return new Promise<void>((resolveDelete, rejectDelete) => {
-          const deleteRequest = store.delete(id);
-          deleteRequest.onsuccess = () => resolveDelete();
-          deleteRequest.onerror = () => rejectDelete(deleteRequest.error);
+        // Find duplicates based on English word and battle
+        words.forEach((word, index) => {
+          const key = `${word.en.toLowerCase()}-${word.battle}`;
+          if (uniqueWords.has(key)) {
+            duplicateKeys.push(keys[index]);
+          } else {
+            uniqueWords.set(key, keys[index]);
+          }
         });
-      });
 
-      Promise.all(deletePromises)
-        .then(() => {
-          console.log(`Deleted ${duplicates.length} duplicate words`);
+        if (duplicateKeys.length === 0) {
+          console.log("No duplicates found");
           resolve();
-        })
-        .catch((error) => {
-          console.error("Error deleting duplicates:", error);
-          reject(error);
+          return;
+        }
+
+        console.log(`Found ${duplicateKeys.length} duplicates to delete`);
+
+        // Delete duplicates one by one
+        let deleted = 0;
+        duplicateKeys.forEach((key) => {
+          const deleteRequest = store.delete(key);
+          deleteRequest.onsuccess = () => {
+            deleted++;
+            if (deleted === duplicateKeys.length) {
+              console.log(`Successfully deleted ${deleted} duplicate words`);
+              resolve();
+            }
+          };
+          deleteRequest.onerror = () => {
+            console.error(`Error deleting key ${key}:`, deleteRequest.error);
+            reject(deleteRequest.error);
+          };
         });
+      };
+    };
+
+    transaction.onerror = () => {
+      console.error("Transaction error:", transaction.error);
+      reject(transaction.error);
     };
   });
 };
