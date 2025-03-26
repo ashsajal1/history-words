@@ -5,7 +5,12 @@
         <h3 class="font-bold flex items-center gap-2">
           {{ props.word.en }} - {{ props.word.bn }}
           <Button
-            @click="speakWord"
+            @click="
+              () => {
+                speakWord();
+                speakBnWord();
+              }
+            "
             :disabled="isPlaying"
             class="p-button-rounded p-button-text p-button-sm"
           >
@@ -28,7 +33,16 @@
           <Volume2Icon :size="16" :stroke-width="1.5" />
         </Button>
       </p>
-      <p class="text-sm mt-1">{{ props.word.bnSentence }}</p>
+      <p class="text-sm flex items-center gap-2 mt-1">
+        {{ props.word.bnSentence }}
+        <Button
+          @click="speakBnSentence"
+          :disabled="isPlaying"
+          class="p-button-rounded p-button-text p-button-sm"
+        >
+          <Volume2Icon :size="16" :stroke-width="1.5" />
+        </Button>
+      </p>
     </div>
   </div>
 </template>
@@ -67,6 +81,20 @@ const { speak: speakWord } = useSpeechSynthesis(props.word.en, {
 
 const { speak: speakSentence } = useSpeechSynthesis(props.word.sentence, {
   lang: "en-US",
+  rate: 0.9,
+  pitch: 1,
+  volume: 1,
+});
+
+const { speak: speakBnWord } = useSpeechSynthesis(props.word.bn, {
+  lang: "bn-BD",
+  rate: 0.9,
+  pitch: 1,
+  volume: 1,
+});
+
+const { speak: speakBnSentence } = useSpeechSynthesis(props.word.bnSentence, {
+  lang: "bn-BD",
   rate: 0.9,
   pitch: 1,
   volume: 1,
