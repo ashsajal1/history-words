@@ -1,6 +1,15 @@
+interface Word {
+  id?: number;
+  battle: string;
+  en: string;
+  bn: string;
+  sentence: string;
+  bnSentence: string;
+}
+
 const DB_NAME = 'historyWordsDB';
 const STORE_NAME = 'words';
-const DB_VERSION = 2; // Increment version to trigger schema update
+const DB_VERSION = 3; // Increment version to trigger schema update
 
 export const initDB = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
@@ -15,12 +24,30 @@ export const initDB = (): Promise<IDBDatabase> => {
         db.deleteObjectStore(STORE_NAME);
       }
       // Create store with auto-incrementing id
-      db.createObjectStore(STORE_NAME, { autoIncrement: true });
+      const store = db.createObjectStore(STORE_NAME, { autoIncrement: true });
+      // Add index for battle field
+      store.createIndex('battle', 'battle', { unique: false });
     };
   });
 };
 
-export const saveToIndexedDB = async (data: any[]): Promise<void> => {
+export const getWordsByBattle = async (battle: string): Promise<Word[]> => {
+  const db = await initDB();
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, 'readonly');
+    const store = transaction.objectStore(STORE_NAME);
+    const index = store.index('battle');
+    const request = index.getAll(battle);
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+  });
+};
+
+export const saveToIndexedDB = async (data: Word[]): Promise<void> => {
   const db = await initDB();
   
   return new Promise((resolve, reject) => {
