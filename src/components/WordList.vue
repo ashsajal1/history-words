@@ -1,16 +1,33 @@
 <template>
   <div class="p-4">
     <h2 class="text-xl font-bold mb-4">Imported Words</h2>
+    
+    <!-- Battle Filter -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        Filter by Battle:
+      </label>
+      <select 
+        v-model="selectedBattle"
+        class="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
+      >
+        <option value="">All Battles</option>
+        <option v-for="battle in battles" :key="battle" :value="battle">
+          {{ battle }}
+        </option>
+      </select>
+    </div>
+
     <div v-if="loading" class="text-gray-500">Loading...</div>
-    <div v-else-if="!words || words.length === 0" class="text-gray-500">No words found</div>
+    <div v-else-if="!filteredWords.length" class="text-gray-500">No words found</div>
     <div v-else class="grid gap-4">
       <!-- Debug info -->
       <div class="text-sm text-gray-500 mb-2">
-        Total words: {{ words.length }}
+        Total words: {{ filteredWords.length }}
       </div>
       
       <!-- Word cards -->
-      <div v-for="(word, index) in words" :key="index" 
+      <div v-for="(word, index) in filteredWords" :key="index" 
            class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
         <div class="flex justify-between items-start">
           <div>
@@ -28,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 
 interface Word {
   id: number;
@@ -41,11 +58,24 @@ interface Word {
 
 const words = ref<Word[]>([]);
 const loading = ref(true);
+const selectedBattle = ref('');
 
 // Watch for changes in words array
 watch(words, (newWords) => {
   console.log('Words updated:', newWords);
 }, { deep: true });
+
+// Compute unique battles from words
+const battles = computed(() => {
+  const uniqueBattles = new Set(words.value.map(word => word.battle));
+  return Array.from(uniqueBattles).sort();
+});
+
+// Filter words based on selected battle
+const filteredWords = computed(() => {
+  if (!selectedBattle.value) return words.value;
+  return words.value.filter(word => word.battle === selectedBattle.value);
+});
 
 const getWordsFromDB = async () => {
   const DB_NAME = 'historyWordsDB';
