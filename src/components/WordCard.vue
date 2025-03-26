@@ -8,8 +8,9 @@
             @click="speakWord"
             :disabled="isPlaying"
             class="p-button-rounded p-button-text p-button-sm"
-            icon="pi pi-volume-up"
-          />
+          >
+            <Volume2Icon :size="16" :stroke-width="1.5" />
+          </Button>
         </h3>
         <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
           Battle: {{ props.word.battle }}
@@ -23,8 +24,9 @@
           @click="speakSentence"
           :disabled="isPlaying"
           class="p-button-rounded p-button-text p-button-sm"
-          icon="pi pi-volume-up"
-        />
+        >
+          <Volume2Icon :size="16" :stroke-width="1.5" />
+        </Button>
       </p>
       <p class="text-sm mt-1">{{ props.word.bnSentence }}</p>
     </div>
@@ -34,6 +36,7 @@
 <script setup lang="ts">
 import { useSpeechSynthesis } from "@vueuse/core";
 import Button from "primevue/button";
+import { Volume2Icon } from "lucide-vue-next";
 
 interface Word {
   id?: number;
