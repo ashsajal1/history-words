@@ -1,6 +1,6 @@
 const DB_NAME = 'historyWordsDB';
 const STORE_NAME = 'words';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Increment version to trigger schema update
 
 export const initDB = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
@@ -11,9 +11,11 @@ export const initDB = (): Promise<IDBDatabase> => {
 
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+      if (db.objectStoreNames.contains(STORE_NAME)) {
+        db.deleteObjectStore(STORE_NAME);
       }
+      // Create store with auto-incrementing id
+      db.createObjectStore(STORE_NAME, { autoIncrement: true });
     };
   });
 };
@@ -25,13 +27,19 @@ export const saveToIndexedDB = async (data: any[]): Promise<void> => {
     const transaction = db.transaction(STORE_NAME, 'readwrite');
     const store = transaction.objectStore(STORE_NAME);
     
-    // Add new data without clearing existing data
+    // Process and add each item without the id field
     data.forEach(item => {
-      // Use put instead of add to update existing entries
-      store.put(item);
+      const { id, ...wordWithoutId } = item;
+      store.add(wordWithoutId);
     });
 
-    transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(transaction.error);
+    transaction.oncomplete = () => {
+      console.log(`Added ${data.length} words to database`);
+      resolve();
+    };
+    transaction.onerror = (error) => {
+      console.error('Transaction error:', error);
+      reject(transaction.error);
+    };
   });
 };
