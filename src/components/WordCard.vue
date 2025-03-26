@@ -26,7 +26,11 @@
       <p class="text-sm flex items-center gap-2">
         {{ props.word.sentence }}
         <Button
-          @click="speakSentence"
+          @click="
+            {
+              speakSentence(), speakBnSentence();
+            }
+          "
           :disabled="isPlaying"
           class="p-button-rounded p-button-text p-button-sm"
         >
