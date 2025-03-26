@@ -52,7 +52,13 @@
 import { ref, onMounted, watch, computed } from "vue";
 import Select from "primevue/select";
 import WordCard from "./WordCard.vue";
-import { getWordsByBattle } from "../services/dbService";
+import { getWordsByBattle, getAllBattles } from "../services/dbService";
+
+// Add Battle interface
+interface Battle {
+  id?: number;
+  name: string;
+}
 
 interface Word {
   id: number;
@@ -64,6 +70,7 @@ interface Word {
 }
 
 const words = ref<Word[]>([]);
+const battles = ref<Battle[]>([]);
 const loading = ref(true);
 const selectedBattle = ref(null);
 
@@ -86,17 +93,11 @@ watch(selectedBattle, async (newBattle) => {
   }
 });
 
-// Compute unique battles from words
-const battles = computed(() => {
-  const uniqueBattles = new Set(words.value.map((word) => word.battle));
-  return Array.from(uniqueBattles).sort();
-});
-
 // Transform battles into options format
 const battleOptions = computed(() => {
   return battles.value.map((battle) => ({
-    name: battle,
-    code: battle.toLowerCase().replace(/\s+/g, "_"),
+    name: battle.name,
+    code: battle.name.toLowerCase().replace(/\s+/g, "_"),
   }));
 });
 
@@ -132,7 +133,19 @@ const getWordsFromDB = async () => {
   }
 };
 
-onMounted(() => {
-  getWordsFromDB();
+// Add function to fetch battles
+const loadBattles = async () => {
+  try {
+    const battlesList = await getAllBattles();
+    battles.value = battlesList;
+  } catch (error) {
+    console.error("Error fetching battles:", error);
+    battles.value = [];
+  }
+};
+
+// Update onMounted to fetch both words and battles
+onMounted(async () => {
+  await Promise.all([getWordsFromDB(), loadBattles()]);
 });
 </script>
