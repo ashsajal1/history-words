@@ -13,12 +13,12 @@
         <MonitorDot :size="16" v-if="mode === 'auto'" />{{ mode }}
       </Button>
       <RouterLink to="/settings">
-        <Button severity="ghost"
+        <Button
           ><Settings stroke-width="1.5" :size="20"
         /></Button>
       </RouterLink>
       <RouterLink to="/import">
-        <Button>Import json</Button>
+        <Button><BookPlus :size="16" stroke-width="1.5" />Import json</Button>
       </RouterLink>
     </div>
   </nav>
@@ -28,7 +28,7 @@
 import { useColorMode, useCycleList } from "@vueuse/core";
 import { Button } from "primevue";
 import { watchEffect } from "vue";
-import { SunDim, Moon, MonitorDot, Settings } from "lucide-vue-next";
+import { SunDim, Moon, MonitorDot, Settings, BookPlus } from "lucide-vue-next";
 
 const mode = useColorMode({
   emitAuto: true,
