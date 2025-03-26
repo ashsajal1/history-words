@@ -55,25 +55,17 @@ const { isPlaying } = useSpeechSynthesis(props.word.en, {
   volume: 1,
 });
 
-const speakWord = () => {
-  const { speak } = useSpeechSynthesis(props.word.en, {
-    lang: "en-US",
-    rate: 0.9,
-    pitch: 1,
-    volume: 1,
-  });
+const { speak: speakWord } = useSpeechSynthesis(props.word.en, {
+  lang: "en-US",
+  rate: 0.9,
+  pitch: 1,
+  volume: 1,
+});
 
-  speak();
-};
-
-const speakSentence = () => {
-  const { speak } = useSpeechSynthesis(props.word.sentence, {
-    lang: "en-US",
-    rate: 0.9,
-    pitch: 1,
-    volume: 1,
-  });
-
-  speak();
-};
+const { speak: speakSentence } = useSpeechSynthesis(props.word.sentence, {
+  lang: "en-US",
+  rate: 0.9,
+  pitch: 1,
+  volume: 1,
+});
 </script>
