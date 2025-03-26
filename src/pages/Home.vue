@@ -1,6 +1,7 @@
 <template>
-    <h1>This is home page</h1>
+  <Worldlist />
 </template>
 
 <script setup>
+import Worldlist from "../components/WordList.vue";
 </script>
