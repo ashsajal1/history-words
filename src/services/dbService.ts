@@ -165,3 +165,49 @@ export const getAllBattles = async (): Promise<Battle[]> => {
     request.onsuccess = () => resolve(request.result);
   });
 };
+
+export const deleteDuplicateWords = async (): Promise<void> => {
+  const db = await initDB();
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(WORDS_STORE, "readwrite");
+    const store = transaction.objectStore(WORDS_STORE);
+    const request = store.getAll();
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const words: Word[] = request.result;
+      const uniqueWords = new Map<string, Word>();
+      const duplicates: number[] = [];
+
+      // Find duplicates based on English word
+      words.forEach((word) => {
+        const key = `${word.en.toLowerCase()}-${word.battle}`;
+        if (uniqueWords.has(key)) {
+          if (word.id) duplicates.push(word.id);
+        } else {
+          uniqueWords.set(key, word);
+        }
+      });
+
+      // Delete duplicates
+      const deletePromises = duplicates.map((id) => {
+        return new Promise<void>((resolveDelete, rejectDelete) => {
+          const deleteRequest = store.delete(id);
+          deleteRequest.onsuccess = () => resolveDelete();
+          deleteRequest.onerror = () => rejectDelete(deleteRequest.error);
+        });
+      });
+
+      Promise.all(deletePromises)
+        .then(() => {
+          console.log(`Deleted ${duplicates.length} duplicate words`);
+          resolve();
+        })
+        .catch((error) => {
+          console.error("Error deleting duplicates:", error);
+          reject(error);
+        });
+    };
+  });
+};
