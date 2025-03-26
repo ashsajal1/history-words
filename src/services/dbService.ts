@@ -229,3 +229,52 @@ export const deleteDuplicateWords = async (): Promise<void> => {
     };
   });
 };
+
+export const deleteWordsByBattle = async (
+  battleName: string
+): Promise<void> => {
+  const db = await initDB();
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(WORDS_STORE, "readwrite");
+    const store = transaction.objectStore(WORDS_STORE);
+    const index = store.index("battle");
+    const request = index.getAllKeys(battleName);
+
+    request.onsuccess = () => {
+      const keys = request.result;
+      let deleted = 0;
+
+      if (keys.length === 0) {
+        resolve();
+        return;
+      }
+
+      keys.forEach((key) => {
+        const deleteRequest = store.delete(key);
+        deleteRequest.onsuccess = () => {
+          deleted++;
+          if (deleted === keys.length) {
+            resolve();
+          }
+        };
+        deleteRequest.onerror = () => reject(deleteRequest.error);
+      });
+    };
+
+    request.onerror = () => reject(request.error);
+  });
+};
+
+export const deleteAllWords = async (): Promise<void> => {
+  const db = await initDB();
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(WORDS_STORE, "readwrite");
+    const store = transaction.objectStore(WORDS_STORE);
+    const request = store.clear();
+
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+};
