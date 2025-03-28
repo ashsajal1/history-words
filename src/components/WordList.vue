@@ -46,7 +46,7 @@
     <div v-else class="grid gap-4">
       <!-- Debug info -->
       <div class="text-sm text-gray-500 mb-2">
-        Showing {{ filteredWords.length }} of {{ displayCount }} words
+        Showing {{ filteredWords.length }} of {{ store.totalWords }} words
       </div>
 
       <!-- Word cards -->
@@ -86,14 +86,6 @@ const filteredWords = computed(() => {
     return store.words;
   }
   return store.words.filter((word) => word.battle === selectedBattle.value?.name);
-});
-
-// Update display info
-const displayCount = computed(() => {
-  if (!selectedBattle.value) {
-    return store.totalWords;
-  }
-  return filteredWords.value.length;
 });
 
 const handleBattleChange = (battle: { name: string; code: string } | null) => {
