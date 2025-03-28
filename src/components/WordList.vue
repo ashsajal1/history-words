@@ -111,6 +111,6 @@ const handleDeleteDuplicates = async () => {
 
 // Initialize data on component mount
 onMounted(async () => {
-  await Promise.all([store.loadWords(), store.loadBattles()]);
+  if (!store.words.length) await Promise.all([store.loadWords(), store.loadBattles()]);
 });
 </script>
