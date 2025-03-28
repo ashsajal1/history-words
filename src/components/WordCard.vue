@@ -37,7 +37,7 @@
     <Button
       v-if="isPlaying"
       @click="stopSpeaking"
-      class="fixed bottom-6 left-6 p-button-rounded p-button-danger"
+      class="fixed bottom-6 right-6 p-button-rounded p-button-danger"
     >
       <VolumeXIcon :size="20" :stroke-width="1.5" />
     </Button>
