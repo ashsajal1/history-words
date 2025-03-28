@@ -30,22 +30,25 @@
       </p>
       <p class="text-sm flex items-center gap-2 mt-1">
         {{ props.word.bnSentence }}
-        <Button
-          @click="speakBnSentence"
-          :disabled="isPlaying"
-          class="p-button-rounded p-button-text p-button-sm"
-        >
-          <Volume2Icon :size="16" :stroke-width="1.5" />
-        </Button>
       </p>
     </div>
+
+    <!-- Stop Button -->
+    <Button
+      v-if="isPlaying"
+      @click="stopSpeaking"
+      class="fixed bottom-6 left-6 p-button-rounded p-button-danger"
+    >
+      <VolumeXIcon :size="20" :stroke-width="1.5" />
+    </Button>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useSpeechSynthesis } from "@vueuse/core";
+import { computed } from "vue";
 import Button from "primevue/button";
-import { Volume2Icon } from "lucide-vue-next";
+import { Volume2Icon, VolumeXIcon } from "lucide-vue-next";
+import { useSpeaker } from "../composables/useSpeaker";
 
 interface Word {
   id?: number;
@@ -60,63 +63,38 @@ const props = defineProps<{
   word: Word;
 }>();
 
-const { isPlaying } = useSpeechSynthesis(props.word.en, {
+// Initialize speakers for different languages
+const englishSpeaker = useSpeaker({
   lang: "en-US",
   rate: 0.9,
   pitch: 1,
   volume: 1,
 });
 
-const { speak: speakEnWord } = useSpeechSynthesis(props.word.en, {
-  lang: "en-US",
-  rate: 0.9,
-  pitch: 1,
-  volume: 1,
-});
-
-const { speak: speakEnSentence } = useSpeechSynthesis(props.word.sentence, {
-  lang: "en-US",
-  rate: 0.9,
-  pitch: 1,
-  volume: 1,
-});
-
-const { speak: speakBnWord } = useSpeechSynthesis(props.word.bn, {
+const bengaliSpeaker = useSpeaker({
   lang: "bn-BD",
   rate: 0.9,
   pitch: 1,
   volume: 1,
 });
 
-const { speak: speakBnSentence } = useSpeechSynthesis(props.word.bnSentence, {
-  lang: "bn-BD",
-  rate: 0.9,
-  pitch: 1,
-  volume: 1,
-});
+// Computed property to check if either speaker is playing
+const isPlaying = computed(
+  () => englishSpeaker.isPlaying.value || bengaliSpeaker.isPlaying.value
+);
 
-const speakWord = () => {
-  speakEnWord();
-  //sleep few seconds based on word length
-  const wordLength = props.word.en.split(" ").length;
-  const sleepTime = wordLength * 0.5 * 1000 + 300;
-  setTimeout(() => {
-    speakBnWord();
-  }, sleepTime);
-  speakBnWord();
+const speakWord = async () => {
+  await englishSpeaker.speak(props.word.en);
+  await bengaliSpeaker.speak(props.word.bn);
 };
 
-const speakSentence = () => {
-  // Speak English first
-  speakEnSentence();
+const speakSentence = async () => {
+  await englishSpeaker.speak(props.word.sentence);
+  await bengaliSpeaker.speak(props.word.bnSentence);
+};
 
-  // Calculate sleep time based on sentence length
-  const sentenceLength = props.word.sentence.split(" ").length;
-  const sleepTime = sentenceLength * 0.7 * 1000 + 500;
-
-  // Then, speak Bengali after the delay
-  setTimeout(() => {
-    speakBnSentence();
-  }, sleepTime);
+const stopSpeaking = () => {
+  englishSpeaker.stop();
+  bengaliSpeaker.stop();
 };
 </script>
