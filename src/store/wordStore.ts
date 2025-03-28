@@ -150,7 +150,7 @@ export const useWordStore = defineStore("words", () => {
         // Use the global data that already has the real battle names
         battlePages.value[battleKey] = {
           page: 1,
-          hasMore: false, // or compute this based on your logic
+          hasMore: true, // or compute this based on your logic
           words: filtered,
         };
         words.value = filtered;
