@@ -20,6 +20,12 @@ interface Battle {
   name: string;
 }
 
+interface BattleState {
+  page: number;
+  hasMore: boolean;
+  words: Word[];
+}
+
 export const useWordStore = defineStore("words", () => {
   // State
   const words = ref<Word[]>([]);
@@ -27,9 +33,21 @@ export const useWordStore = defineStore("words", () => {
   const selectedBattle = ref<Battle | null>(null);
   const loading = ref(false);
   const loadingMore = ref(false);
-  const currentPage = ref(1);
-  const hasMore = ref(false);
   const totalWords = ref(0);
+
+  // New state for battle pagination
+  const battlePages = ref<Record<string, BattleState>>({});
+  const currentPage = computed(() => {
+    if (!selectedBattle.value) return 1;
+    return battlePages.value[selectedBattle.value.name]?.page || 1;
+  });
+
+  const hasMore = computed(() => {
+    if (!selectedBattle.value) {
+      return battlePages.value["global"]?.hasMore || false;
+    }
+    return battlePages.value[selectedBattle.value.name]?.hasMore || false;
+  });
 
   // Getters
   const battleOptions = computed(() => {
@@ -50,23 +68,32 @@ export const useWordStore = defineStore("words", () => {
         loadingMore.value = true;
       }
 
-      const result = await getWordsByPage(
-        currentPage.value,
-        10,
-        selectedBattle.value?.name
-      );
+      const battleKey = selectedBattle.value?.name || "global";
+      const page = append ? (battlePages.value[battleKey]?.page || 1) + 1 : 1;
 
-      if (append) {
-        words.value = [...words.value, ...result.words];
-      } else {
-        words.value = result.words;
-      }
+      const result = await getWordsByPage(page, 10, selectedBattle.value?.name);
 
-      hasMore.value = result.hasMore;
+      // Update battle state
+      battlePages.value[battleKey] = {
+        page,
+        hasMore: result.hasMore,
+        words: append
+          ? [...(battlePages.value[battleKey]?.words || []), ...result.words]
+          : result.words,
+      };
+
+      // Update current view
+      words.value = battlePages.value[battleKey].words;
       totalWords.value = result.total;
     } catch (error) {
       console.error("Error fetching words:", error);
       if (!append) {
+        const battleKey = selectedBattle.value?.name || "global";
+        battlePages.value[battleKey] = {
+          page: 1,
+          hasMore: false,
+          words: [],
+        };
         words.value = [];
       }
     } finally {
@@ -87,7 +114,8 @@ export const useWordStore = defineStore("words", () => {
 
   const loadMore = async () => {
     if (hasMore.value) {
-      currentPage.value++;
+      const battleKey = selectedBattle.value?.name || "global";
+      battlePages.value[battleKey].page++;
       await loadWords(true);
     }
   };
@@ -95,7 +123,12 @@ export const useWordStore = defineStore("words", () => {
   const deleteDuplicates = async () => {
     try {
       await deleteDuplicateWords();
-      currentPage.value = 1;
+      const battleKey = selectedBattle.value?.name || "global";
+      battlePages.value[battleKey] = {
+        page: 1,
+        hasMore: false,
+        words: [],
+      };
       await loadWords();
     } catch (error) {
       console.error("Error deleting duplicates:", error);
@@ -105,14 +138,20 @@ export const useWordStore = defineStore("words", () => {
 
   const selectBattle = async (battle: Battle | null) => {
     selectedBattle.value = battle;
-    currentPage.value = 1;
-    await loadWords();
+    const battleKey = battle?.name || "global";
+
+    // If we already have data for this battle, use it
+    if (battlePages.value[battleKey]) {
+      words.value = battlePages.value[battleKey].words;
+    } else {
+      // Otherwise load fresh data
+      await loadWords();
+    }
   };
 
   const reset = () => {
     words.value = [];
-    currentPage.value = 1;
-    hasMore.value = false;
+    battlePages.value = {};
     totalWords.value = 0;
     selectedBattle.value = null;
   };
@@ -124,12 +163,14 @@ export const useWordStore = defineStore("words", () => {
     selectedBattle,
     loading,
     loadingMore,
-    hasMore,
     totalWords,
+    battlePages,
 
     // Getters
     battleOptions,
     filteredWords,
+    currentPage,
+    hasMore,
 
     // Actions
     loadWords,
