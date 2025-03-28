@@ -57,7 +57,7 @@
       />
 
       <!-- Load More Button - only show when no battle is selected -->
-      <div v-if="selectedBattle" class="flex justify-center mt-4">
+      <div class="flex justify-center mt-4">
         <Button
           @click="store.loadMore"
           :loading="store.loadingMore"
