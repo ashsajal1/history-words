@@ -140,13 +140,26 @@ export const useWordStore = defineStore("words", () => {
     selectedBattle.value = battle;
     const battleKey = battle?.name || "global";
 
-    // If we already have data for this battle, use it
-    if (battlePages.value[battleKey]) {
-      words.value = battlePages.value[battleKey].words;
-    } else {
-      // Otherwise load fresh data
-      await loadWords();
+    // If a battle is selected, check if the global words are already loaded.
+    // Then filter out the words for this battle.
+    if (battle && battlePages.value["global"]?.words.length) {
+      const filtered = battlePages.value["global"].words.filter(
+        (word) => word.battle === battle.name
+      );
+      if (filtered.length) {
+        // Use the global data that already has the real battle names
+        battlePages.value[battleKey] = {
+          page: 1,
+          hasMore: false, // or compute this based on your logic
+          words: filtered,
+        };
+        words.value = filtered;
+        return;
+      }
     }
+
+    // Otherwise, load fresh data for the battle/global key
+    await loadWords();
   };
 
   const reset = () => {
