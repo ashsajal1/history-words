@@ -12,6 +12,13 @@ interface Battle {
   name: string;
 }
 
+// Add this interface for pagination response
+interface PaginatedWords {
+  words: Word[];
+  total: number;
+  hasMore: boolean;
+}
+
 const DB_NAME = "historyWordsDB";
 const WORDS_STORE = "words";
 const BATTLES_STORE = "battles";
@@ -61,6 +68,81 @@ export const getWordsByBattle = async (battle: string): Promise<Word[]> => {
     request.onsuccess = () => {
       resolve(request.result);
     };
+  });
+};
+
+export const getWordsByPage = async (
+  page: number,
+  limit: number = 10,
+  battle?: string
+): Promise<PaginatedWords> => {
+  const db = await initDB();
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(WORDS_STORE, "readonly");
+    const store = transaction.objectStore(WORDS_STORE);
+    const index = battle ? store.index("battle") : null;
+
+    // First get total count
+    const countRequest = index ? index.count(battle) : store.count();
+
+    countRequest.onsuccess = () => {
+      const total = countRequest.result;
+      const start = (page - 1) * limit;
+
+      // If start is beyond total, return empty result
+      if (start >= total) {
+        resolve({
+          words: [],
+          total,
+          hasMore: false,
+        });
+        return;
+      }
+
+      // Get the actual records
+      const cursorRequest = index
+        ? index.openCursor(battle)
+        : store.openCursor();
+
+      const words: Word[] = [];
+      let counter = 0;
+
+      cursorRequest.onsuccess = () => {
+        const cursor = cursorRequest.result;
+
+        if (!cursor) {
+          // No more records
+          resolve({
+            words,
+            total,
+            hasMore: start + words.length < total,
+          });
+          return;
+        }
+
+        if (counter >= start) {
+          if (words.length < limit) {
+            words.push(cursor.value);
+          } else {
+            // We have enough records
+            resolve({
+              words,
+              total,
+              hasMore: start + words.length < total,
+            });
+            return;
+          }
+        }
+
+        counter++;
+        cursor.continue();
+      };
+
+      cursorRequest.onerror = () => reject(cursorRequest.error);
+    };
+
+    countRequest.onerror = () => reject(countRequest.error);
   });
 };
 
