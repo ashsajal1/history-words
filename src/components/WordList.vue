@@ -4,7 +4,7 @@
       <h2 class="text-xl font-bold">Imported Words</h2>
       <Button
         @click="handleDeleteDuplicates"
-        :loading="deletingDuplicates"
+        :loading="store.loading"
         severity="danger"
         class="p-button-sm"
       >
@@ -15,8 +15,8 @@
     <!-- Battle Filter -->
     <div class="mb-4">
       <Select
-        v-model="selectedBattle"
-        :options="battleOptions"
+        v-model="store.selectedBattle"
+        :options="store.battleOptions"
         filter
         optionLabel="name"
         placeholder="Select a Battle"
@@ -38,28 +38,30 @@
       </Select>
     </div>
 
-    <div v-if="loading && !words.length" class="text-gray-500">Loading...</div>
-    <div v-else-if="!filteredWords.length" class="text-gray-500">
+    <div v-if="store.loading && !store.words.length" class="text-gray-500">
+      Loading...
+    </div>
+    <div v-else-if="!store.filteredWords.length" class="text-gray-500">
       No words found
     </div>
     <div v-else class="grid gap-4">
       <!-- Debug info -->
       <div class="text-sm text-gray-500 mb-2">
-        Showing {{ words.length }} of {{ totalWords }} words
+        Showing {{ store.words.length }} of {{ store.totalWords }} words
       </div>
 
       <!-- Word cards -->
       <WordCard
-        v-for="(word, index) in filteredWords"
+        v-for="(word, index) in store.filteredWords"
         :key="word.id || index"
         :word="word"
       />
 
       <!-- Load More Button -->
-      <div v-if="hasMore" class="flex justify-center mt-4">
+      <div v-if="store.hasMore" class="flex justify-center mt-4">
         <Button
-          @click="loadMore"
-          :loading="loadingMore"
+          @click="store.loadMore"
+          :loading="store.loadingMore"
           class="p-button-outlined"
         >
           Load More
@@ -70,125 +72,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, computed } from "vue";
+import { onMounted } from "vue";
 import Select from "primevue/select";
 import Button from "primevue/button";
 import WordCard from "./WordCard.vue";
-import {
-  getWordsByPage,
-  getAllBattles,
-  deleteDuplicateWords,
-} from "../services/dbService";
+import { useWordStore } from "../store/wordStore";
 
-// Add Battle interface
-interface Battle {
-  id?: number;
-  name: string;
-}
-
-interface Word {
-  id?: number;
-  battle: string;
-  en: string;
-  bn: string;
-  sentence: string;
-  bnSentence: string;
-}
-
-const words = ref<Word[]>([]);
-const battles = ref<Battle[]>([]);
-const loading = ref(true);
-const loadingMore = ref(false);
-const selectedBattle = ref<Battle | null>(null);
-const deletingDuplicates = ref(false);
-const currentPage = ref(1);
-const hasMore = ref(false);
-const totalWords = ref(0);
+const store = useWordStore();
 
 const handleDeleteDuplicates = async () => {
   try {
-    deletingDuplicates.value = true;
-    await deleteDuplicateWords();
-    // Reset pagination and refresh
-    currentPage.value = 1;
-    await loadWords();
+    await store.deleteDuplicates();
   } catch (error) {
     console.error("Error deleting duplicates:", error);
-  } finally {
-    deletingDuplicates.value = false;
   }
 };
 
-const loadWords = async (append = false) => {
-  try {
-    if (!append) {
-      loading.value = true;
-    } else {
-      loadingMore.value = true;
-    }
-
-    const result = await getWordsByPage(
-      currentPage.value,
-      10,
-      selectedBattle.value?.name
-    );
-
-    if (append) {
-      words.value = [...words.value, ...result.words];
-    } else {
-      words.value = result.words;
-    }
-
-    hasMore.value = result.hasMore;
-    totalWords.value = result.total;
-  } catch (error) {
-    console.error("Error fetching words:", error);
-    if (!append) {
-      words.value = [];
-    }
-  } finally {
-    loading.value = false;
-    loadingMore.value = false;
-  }
-};
-
-const loadMore = async () => {
-  if (hasMore.value) {
-    currentPage.value++;
-    await loadWords(true);
-  }
-};
-
-// Watch for battle selection changes
-watch(selectedBattle, async () => {
-  currentPage.value = 1; // Reset to first page
-  await loadWords();
-});
-
-// Transform battles into options format
-const battleOptions = computed(() => {
-  return battles.value.map((battle) => ({
-    name: battle.name,
-    code: battle.name.toLowerCase().replace(/\s+/g, "_"),
-  }));
-});
-
-// Update filteredWords computed property
-const filteredWords = computed(() => words.value);
-
-// Add function to fetch battles
-const loadBattles = async () => {
-  try {
-    const battlesList = await getAllBattles();
-    battles.value = battlesList;
-  } catch (error) {
-    console.error("Error fetching battles:", error);
-    battles.value = [];
-  }
-};
-
-// Update onMounted to fetch both words and battles
+// Initialize data on component mount
 onMounted(async () => {
-  await Promise.all([loadWords(), loadBattles()]);
+  await Promise.all([store.loadWords(), store.loadBattles()]);
 });
 </script>
