@@ -38,22 +38,33 @@
       </Select>
     </div>
 
-    <div v-if="loading" class="text-gray-500">Loading...</div>
+    <div v-if="loading && !words.length" class="text-gray-500">Loading...</div>
     <div v-else-if="!filteredWords.length" class="text-gray-500">
       No words found
     </div>
     <div v-else class="grid gap-4">
       <!-- Debug info -->
       <div class="text-sm text-gray-500 mb-2">
-        Total words: {{ filteredWords.length }}
+        Showing {{ words.length }} of {{ totalWords }} words
       </div>
 
       <!-- Word cards -->
       <WordCard
         v-for="(word, index) in filteredWords"
-        :key="index"
+        :key="word.id || index"
         :word="word"
       />
+
+      <!-- Load More Button -->
+      <div v-if="hasMore" class="flex justify-center mt-4">
+        <Button
+          @click="loadMore"
+          :loading="loadingMore"
+          class="p-button-outlined"
+        >
+          Load More
+        </Button>
+      </div>
     </div>
   </div>
 </template>
@@ -63,7 +74,11 @@ import { ref, onMounted, watch, computed } from "vue";
 import Select from "primevue/select";
 import Button from "primevue/button";
 import WordCard from "./WordCard.vue";
-import { getWordsByBattle, getAllBattles, deleteDuplicateWords } from "../services/dbService";
+import {
+  getWordsByPage,
+  getAllBattles,
+  deleteDuplicateWords,
+} from "../services/dbService";
 
 // Add Battle interface
 interface Battle {
@@ -83,20 +98,20 @@ interface Word {
 const words = ref<Word[]>([]);
 const battles = ref<Battle[]>([]);
 const loading = ref(true);
+const loadingMore = ref(false);
 const selectedBattle = ref<Battle | null>(null);
 const deletingDuplicates = ref(false);
+const currentPage = ref(1);
+const hasMore = ref(false);
+const totalWords = ref(0);
 
 const handleDeleteDuplicates = async () => {
   try {
     deletingDuplicates.value = true;
     await deleteDuplicateWords();
-    // Refresh the word list
-    if (selectedBattle.value) {
-      const battleWords = await getWordsByBattle(selectedBattle.value.name);
-      words.value = battleWords;
-    } else {
-      await getWordsFromDB();
-    }
+    // Reset pagination and refresh
+    currentPage.value = 1;
+    await loadWords();
   } catch (error) {
     console.error("Error deleting duplicates:", error);
   } finally {
@@ -104,23 +119,50 @@ const handleDeleteDuplicates = async () => {
   }
 };
 
-// Watch for changes in selected battle
-watch(selectedBattle, async (newBattle) => {
-  if (newBattle) {
-    try {
+const loadWords = async (append = false) => {
+  try {
+    if (!append) {
       loading.value = true;
-      const battleWords = await getWordsByBattle(newBattle.name);
-      words.value = battleWords;
-    } catch (error) {
-      console.error('Error fetching battle words:', error);
-      words.value = [];
-    } finally {
-      loading.value = false;
+    } else {
+      loadingMore.value = true;
     }
-  } else {
-    // When no battle is selected, fetch all words
-    getWordsFromDB();
+
+    const result = await getWordsByPage(
+      currentPage.value,
+      10,
+      selectedBattle.value?.name
+    );
+
+    if (append) {
+      words.value = [...words.value, ...result.words];
+    } else {
+      words.value = result.words;
+    }
+
+    hasMore.value = result.hasMore;
+    totalWords.value = result.total;
+  } catch (error) {
+    console.error("Error fetching words:", error);
+    if (!append) {
+      words.value = [];
+    }
+  } finally {
+    loading.value = false;
+    loadingMore.value = false;
   }
+};
+
+const loadMore = async () => {
+  if (hasMore.value) {
+    currentPage.value++;
+    await loadWords(true);
+  }
+};
+
+// Watch for battle selection changes
+watch(selectedBattle, async () => {
+  currentPage.value = 1; // Reset to first page
+  await loadWords();
 });
 
 // Transform battles into options format
@@ -132,36 +174,7 @@ const battleOptions = computed(() => {
 });
 
 // Update filteredWords computed property
-const filteredWords = computed(() => {
-  return words.value;
-});
-
-const getWordsFromDB = async () => {
-  try {
-    loading.value = true;
-    const db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open("historyWordsDB");
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(request.result);
-    });
-
-    const transaction = db.transaction("words", "readonly");
-    const store = transaction.objectStore("words");
-    const request = store.getAll();
-
-    const result = await new Promise<Word[]>((resolve, reject) => {
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(request.result);
-    });
-
-    words.value = result;
-  } catch (error) {
-    console.error("Error fetching words:", error);
-    words.value = [];
-  } finally {
-    loading.value = false;
-  }
-};
+const filteredWords = computed(() => words.value);
 
 // Add function to fetch battles
 const loadBattles = async () => {
@@ -176,6 +189,6 @@ const loadBattles = async () => {
 
 // Update onMounted to fetch both words and battles
 onMounted(async () => {
-  await Promise.all([getWordsFromDB(), loadBattles()]);
+  await Promise.all([loadWords(), loadBattles()]);
 });
 </script>
