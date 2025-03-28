@@ -153,6 +153,9 @@ export const useWordStore = defineStore("words", () => {
           hasMore: true, // or compute this based on your logic
           words: filtered,
         };
+
+        const result = await getWordsByPage(0, 0, selectedBattle.value?.name);
+        totalWords.value = result.total;
         words.value = filtered;
         return;
       }
