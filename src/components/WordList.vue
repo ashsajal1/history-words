@@ -98,6 +98,7 @@ const displayCount = computed(() => {
 
 const handleBattleChange = (battle: { name: string; code: string } | null) => {
   selectedBattle.value = battle;
+  store.selectBattle(battle);
 };
 
 const handleDeleteDuplicates = async () => {
