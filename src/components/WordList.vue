@@ -43,7 +43,7 @@
       Loading...
     </div>
     <div v-else-if="!filteredWords.length" class="text-gray-500">No words found</div>
-    <div v-else class="grid gap-4">
+    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
       <!-- Debug info -->
       <div class="text-sm text-gray-500 mb-2">
         Showing {{ filteredWords.length }} of {{ store.totalWords }} words
