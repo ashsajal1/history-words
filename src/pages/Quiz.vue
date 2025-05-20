@@ -35,7 +35,7 @@
           :key="index"
           class="p-4 border rounded-lg cursor-pointer transition-colors"
           :class="{
-            'hover:bg-gray-50': !selectedAnswer,
+            'hover:bg-gray-50 dark:hover:bg-gray-700': !selectedAnswer,
             'bg-primary-100 border-primary': selectedAnswer === option,
             'bg-red-100 border-red-500':
               selectedAnswer === option && selectedAnswer !== currentQuestion.bn,
