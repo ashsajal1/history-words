@@ -14,7 +14,10 @@
     </div>
 
     <!-- Quiz Section -->
-    <div v-if="currentQuestion" class="bg-white rounded-lg shadow-lg p-6">
+    <div
+      v-if="currentQuestion"
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6"
+    >
       <div class="mb-4">
         <span class="text-sm text-gray-500"
           >Question {{ currentQuestionIndex + 1 }} of {{ questions.length }}</span
