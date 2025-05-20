@@ -29,6 +29,14 @@ const routes = [
     },
   },
   {
+    path: "/quiz",
+    component: Settings,
+    meta: {
+      title: "Quiz Page",
+      description: "Play a quiz on this page.",
+    },
+  },
+  {
     path: "/settings",
     component: Settings,
     meta: {
