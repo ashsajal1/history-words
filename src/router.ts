@@ -5,6 +5,7 @@ import AboutView from "./pages/About.vue";
 import NotFound from "./pages/NotFound.vue";
 import Import from "./pages/Import.vue";
 import Settings from "./pages/Settings.vue";
+import Quiz from "./pages/Quiz.vue";
 
 const routes = [
   {
@@ -30,7 +31,7 @@ const routes = [
   },
   {
     path: "/quiz",
-    component: Settings,
+    component: Quiz,
     meta: {
       title: "Quiz Page",
       description: "Play a quiz on this page.",
