@@ -1,10 +1,14 @@
 <template>
   <div class="container mx-auto p-4">
-    <div v-if="!hasBattles" class="text-center">
+    <div v-if="!hasWords" class="text-center">
       <h2 class="text-2xl font-bold mb-4">Welcome to History Words!</h2>
       <p class="text-gray-600 dark:text-gray-300 mb-6">
-        It looks like you don't have any battles yet. Would you like to add sample words
-        from the Battle of Yarmouk?
+        {{
+          hasBattles
+            ? "You have battles but no words yet."
+            : "It looks like you don't have any battles yet."
+        }}
+        Would you like to add sample words from the Battle of Yarmouk?
       </p>
       <Button
         label="Add Sample Battle"
@@ -19,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import Worldlist from "../components/WordList.vue";
 import { useWordStore } from "../store/wordStore";
 import Button from "primevue/button";
@@ -27,6 +31,10 @@ import Button from "primevue/button";
 const wordStore = useWordStore();
 const hasBattles = ref(false);
 const loading = ref(false);
+
+const hasWords = computed(() => {
+  return wordStore.words.length > 0;
+});
 
 const sampleWords = [
   {
