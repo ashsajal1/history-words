@@ -37,9 +37,9 @@
           :class="{
             'hover:bg-gray-50 dark:hover:bg-gray-700': !selectedAnswer,
             'bg-primary-100 border-primary': selectedAnswer === option,
-            'bg-red-100 border-red-500':
+            'bg-red-100 border-red-500 text-gray-700':
               selectedAnswer === option && selectedAnswer !== currentQuestion.bn,
-            'bg-green-100 border-green-500':
+            'bg-green-100 border-green-500 text-gray-700':
               selectedAnswer === option && selectedAnswer === currentQuestion.bn,
           }"
           @click="selectAnswer(option)"
