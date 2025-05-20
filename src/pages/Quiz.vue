@@ -106,6 +106,7 @@ const currentQuestionIndex = ref(0);
 const selectedAnswer = ref("");
 const score = ref(0);
 const showResults = ref(false);
+const hasMoreWords = ref(true);
 
 // Computed properties
 const currentQuestion = computed(() => questions.value[currentQuestionIndex.value]);
@@ -121,14 +122,21 @@ const currentOptions = computed(() => {
 const handleBattleChange = async () => {
   if (selectedBattle.value) {
     await wordStore.selectBattle(selectedBattle.value);
-    generateQuiz();
+    await generateQuiz();
   }
 };
 
-const generateQuiz = () => {
+const generateQuiz = async (append = false) => {
+  if (!append) {
+    currentQuestionIndex.value = 0;
+    selectedAnswer.value = "";
+    score.value = 0;
+    showResults.value = false;
+  }
+
   const allWords = wordStore.words;
   const shuffledWords = [...allWords].sort(() => Math.random() - 0.5);
-  questions.value = shuffledWords.slice(0, 10).map((word) => {
+  const newQuestions = shuffledWords.slice(0, 10).map((word) => {
     // Get 3 random wrong answers
     const wrongAnswers = allWords
       .filter((w) => w.bn !== word.bn)
@@ -144,10 +152,15 @@ const generateQuiz = () => {
       options,
     };
   });
-  currentQuestionIndex.value = 0;
-  selectedAnswer.value = "";
-  score.value = 0;
-  showResults.value = false;
+
+  if (append) {
+    questions.value = [...questions.value, ...newQuestions];
+  } else {
+    questions.value = newQuestions;
+  }
+
+  // Check if we have more words to load
+  hasMoreWords.value = wordStore.hasMore;
 };
 
 const selectAnswer = (answer: string) => {
@@ -158,9 +171,15 @@ const selectAnswer = (answer: string) => {
   }
 };
 
-const nextQuestion = () => {
+const nextQuestion = async () => {
   if (isLastQuestion.value) {
-    showResults.value = true;
+    if (hasMoreWords.value) {
+      // Load more words if available
+      await wordStore.loadMore();
+      await generateQuiz(true);
+    } else {
+      showResults.value = true;
+    }
   } else {
     currentQuestionIndex.value++;
     selectedAnswer.value = "";
