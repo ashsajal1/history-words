@@ -1,7 +1,5 @@
 <template>
-  <nav
-    class="flex items-center justify-between p-4 border-b dark:border-b-gray-700"
-  >
+  <nav class="flex items-center justify-between p-4 border-b dark:border-b-gray-700">
     <div class="flex items-center justify-between w-full">
       <div class="flex items-center gap-8">
         <RouterLink
@@ -47,11 +45,7 @@
             <span>Settings</span>
           </Button>
         </RouterLink>
-        <Button
-          size="small"
-          class="lg:hidden"
-          @click="isSidebarOpen = !isSidebarOpen"
-        >
+        <Button size="small" class="lg:hidden" @click="isSidebarOpen = !isSidebarOpen">
           <Menu :size="20" />
         </Button>
       </div>
@@ -142,10 +136,6 @@ watchEffect(() => (mode.value = state.value));
 </script>
 
 <style scoped>
-.router-link-active {
-  @apply bg-gray-100 dark:bg-gray-700;
-}
-
 .hover\:text-primary-500:hover {
   @apply text-primary-500;
 }
