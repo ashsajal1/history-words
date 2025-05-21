@@ -39,7 +39,7 @@
             <Button
               label="Browse Files"
               icon="pi pi-upload"
-              @click="$refs.fileInput.click()"
+              @click="handleFileClick"
               class="p-button-outlined"
             />
           </div>
@@ -86,7 +86,9 @@
       <!-- Sample Format Section -->
       <div class="mt-8">
         <h3 class="text-lg font-semibold mb-3 dark:text-white">Expected JSON Format:</h3>
-        <pre class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg overflow-x-auto text-sm">
+        <pre
+          class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg overflow-x-auto text-sm"
+        >
 [
   {
     "battle": "Battle Name",
@@ -95,7 +97,8 @@
     "sentence": "English Sentence",
     "bnSentence": "Bengali Sentence"
   }
-]</pre>
+]</pre
+        >
       </div>
     </div>
   </div>
@@ -124,29 +127,30 @@ const fileInput = ref<HTMLInputElement | null>(null);
 
 const validateWordData = (data: any): data is Word[] => {
   if (!Array.isArray(data)) return false;
-  
-  return data.every(item => 
-    typeof item.id === 'number' &&
-    typeof item.battle === 'string' &&
-    typeof item.en === 'string' &&
-    typeof item.bn === 'string' &&
-    typeof item.sentence === 'string' &&
-    typeof item.bnSentence === 'string'
+
+  return data.every(
+    (item) =>
+      typeof item.id === "number" &&
+      typeof item.battle === "string" &&
+      typeof item.en === "string" &&
+      typeof item.bn === "string" &&
+      typeof item.sentence === "string" &&
+      typeof item.bnSentence === "string"
   );
 };
 
 const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) return "0 Bytes";
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 };
 
 const handleDrop = (e: DragEvent) => {
   isDragging.value = false;
   const file = e.dataTransfer?.files[0];
-  if (file && file.type === 'application/json') {
+  if (file && file.type === "application/json") {
     selectedFile.value = file;
     processFile(file);
   } else {
@@ -167,7 +171,7 @@ const processFile = async (file: File) => {
   try {
     const text = await file.text();
     const data = JSON.parse(text);
-    
+
     if (!validateWordData(data)) {
       message.value = "Error: Invalid data format. Please check your JSON structure.";
       isError.value = true;
@@ -179,9 +183,7 @@ const processFile = async (file: File) => {
     isError.value = false;
     clearFile();
   } catch (error) {
-    message.value = `Error: ${
-      error instanceof Error ? error.message : "Unknown error"
-    }`;
+    message.value = `Error: ${error instanceof Error ? error.message : "Unknown error"}`;
     isError.value = true;
   }
 };
@@ -193,6 +195,10 @@ const onFileChange = (e: Event) => {
     selectedFile.value = file;
     processFile(file);
   }
+};
+
+const handleFileClick = () => {
+  fileInput.value?.click();
 };
 </script>
 
