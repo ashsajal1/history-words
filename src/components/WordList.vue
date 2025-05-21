@@ -207,11 +207,6 @@ const addSampleBattle = async () => {
       store.reset();
     }
 
-    // Add the battle first
-    const battle = {
-      name: "Battle of Yarmouk",
-    };
-
     // Add sample words
     for (const word of sampleWords) {
       await store.addWord(word);
