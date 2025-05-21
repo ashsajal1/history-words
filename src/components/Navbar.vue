@@ -1,34 +1,60 @@
 <template>
-  <nav class="flex items-center justify-between p-4 border-b dark:border-b-gray-700">
+  <nav
+    class="flex items-center justify-between p-4 border-b dark:border-b-gray-700"
+  >
     <div class="flex items-center justify-between w-full">
-      <RouterLink to="/" class="text-2xl font-bold select-none cursor-pointer"
-        >BattleWords</RouterLink
-      >
-      <Button size="small" class="lg:hidden" @click="isSidebarOpen = !isSidebarOpen">
-        <Menu :size="20" />
-      </Button>
-    </div>
-
-    <!-- Desktop Navigation -->
-    <div class="hidden lg:flex items-center justify-between gap-2">
-      <RouterLink to="/quiz">
-        <Button size="small" class="p-button-outlined">
-          <Brain :size="16" stroke-width="1.5" class="mr-1" />Quiz
-        </Button>
-      </RouterLink>
-      <Button size="small" rounded variant="outlined" @click="next()">
-        <SunDim :size="20" v-if="mode === 'dark'" />
-        <Moon :size="20" v-if="mode === 'light'" />
-        <MonitorDot :size="16" v-if="mode === 'auto'" />{{ mode }}
-      </Button>
-      <RouterLink to="/settings">
-        <Button size="small"><Settings stroke-width="1.5" :size="20" /></Button>
-      </RouterLink>
-      <RouterLink to="/import">
-        <Button size="small"
-          ><BookPlus :size="16" stroke-width="1.5" />Import json</Button
+      <div class="flex items-center gap-8">
+        <RouterLink
+          to="/"
+          class="text-2xl font-bold select-none cursor-pointer hover:text-primary-500 transition-colors"
+          >BattleWords</RouterLink
         >
-      </RouterLink>
+      </div>
+
+      <!-- Desktop Navigation -->
+      <div class="hidden lg:flex items-center gap-4">
+        <RouterLink
+          to="/quiz"
+          class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        >
+          <Brain :size="18" stroke-width="1.5" />
+          <span>Quiz</span>
+        </RouterLink>
+        <RouterLink
+          to="/import"
+          class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        >
+          <BookPlus :size="18" stroke-width="1.5" />
+          <span>Import</span>
+        </RouterLink>
+      </div>
+      <div class="flex items-center gap-4">
+        <Button
+          size="small"
+          rounded
+          variant="outlined"
+          @click="next()"
+          class="hidden lg:flex items-center gap-2"
+        >
+          <SunDim :size="20" v-if="mode === 'dark'" />
+          <Moon :size="20" v-if="mode === 'light'" />
+          <MonitorDot :size="16" v-if="mode === 'auto'" />
+          <span class="capitalize">{{ mode }}</span>
+        </Button>
+        <RouterLink to="/settings">
+          <Button size="small" class="hidden lg:flex items-center gap-2">
+            <Settings stroke-width="1.5" :size="20" />
+            <span>Settings</span>
+          </Button>
+        </RouterLink>
+        <Button
+          size="small"
+          class="lg:hidden"
+          @click="isSidebarOpen = !isSidebarOpen"
+        >
+          <Menu :size="20" />
+        </Button>
+      </div>
     </div>
 
     <!-- Mobile Sidebar -->
@@ -118,5 +144,9 @@ watchEffect(() => (mode.value = state.value));
 <style scoped>
 .router-link-active {
   @apply bg-gray-100 dark:bg-gray-700;
+}
+
+.hover\:text-primary-500:hover {
+  @apply text-primary-500;
 }
 </style>
