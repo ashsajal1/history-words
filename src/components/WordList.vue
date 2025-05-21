@@ -1,30 +1,46 @@
 <template>
-  <div class="p-4">
-    <div class="flex justify-between items-center mb-4">
-      <h2 class="text-xl font-bold">Imported Words</h2>
-      <Button
-        @click="handleDeleteDuplicates"
-        :loading="store.loading"
-        severity="danger"
-        class="p-button-sm"
-      >
-        Delete Duplicates
-      </Button>
+  <div class="p-4 max-w-7xl mx-auto">
+    <!-- Header Section -->
+    <div
+      class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6"
+    >
+      <div class="flex items-center gap-3">
+        <h2 class="text-2xl font-bold">Imported Words</h2>
+        <span class="text-sm text-gray-500 dark:text-gray-400">
+          {{ filteredWords.length }} words
+        </span>
+      </div>
+      <div class="flex items-center gap-3">
+        <Button
+          @click="handleDeleteDuplicates"
+          :loading="store.loading"
+          severity="danger"
+          class="p-button-sm"
+          :disabled="!store.words.length"
+        >
+          <Trash2 :size="16" class="mr-2" />
+          Delete Duplicates
+        </Button>
+      </div>
     </div>
 
     <!-- Battle Filter -->
-    <div class="mb-4">
+    <div class="mb-6">
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        Filter by Battle
+      </label>
       <Select
         v-model="selectedBattle"
         :options="store.battleOptions"
         filter
         optionLabel="name"
         placeholder="Select a Battle"
-        class="w-full md:w-56"
+        class="w-full md:w-64"
         @change="(event) => handleBattleChange(event.value)"
       >
         <template #value="slotProps">
           <div v-if="slotProps.value" class="flex items-center">
+            <Swords :size="16" class="mr-2 text-gray-500" />
             <div>{{ slotProps.value.name }}</div>
           </div>
           <span v-else>
@@ -33,48 +49,74 @@
         </template>
         <template #option="slotProps">
           <div class="flex items-center">
+            <Swords :size="16" class="mr-2 text-gray-500" />
             <div>{{ slotProps.option.name }}</div>
           </div>
         </template>
       </Select>
     </div>
 
-    <div v-if="store.loading && !store.words.length" class="text-gray-500">
-      Loading...
+    <!-- Loading State -->
+    <div
+      v-if="store.loading && !store.words.length"
+      class="flex flex-col items-center justify-center py-12"
+    >
+      <div
+        class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mb-4"
+      ></div>
+      <p class="text-gray-500 dark:text-gray-400">Loading your words...</p>
     </div>
-    <div v-else-if="!filteredWords.length" class="text-center py-8">
-      <p class="text-gray-600 dark:text-gray-300 mb-6">
-        {{
-          store.battles.length
-            ? "You have battles but no words yet."
-            : "It looks like you don't have any battles yet."
-        }}
-        Would you like to add sample words from the Battle of Yarmouk?
-      </p>
-      <Button
-        label="Add Sample Battle"
-        icon="pi pi-plus"
-        @click="addSampleBattle"
-        :loading="loading"
-        class="p-button-primary"
-      />
-    </div>
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-      <!-- Word cards -->
-      <WordCard
-        v-for="(word, index) in filteredWords"
-        :key="word.id || index"
-        :word="word"
-      />
 
-      <!-- Load More Button - only show when no battle is selected -->
-      <div class="flex justify-center mt-4">
+    <!-- Empty State -->
+    <div
+      v-else-if="!filteredWords.length"
+      class="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg"
+    >
+      <div class="max-w-md mx-auto">
+        <BookOpen :size="48" class="mx-auto mb-4 text-gray-400" />
+        <h3 class="text-xl font-semibold mb-2">
+          {{ store.battles.length ? "No Words Found" : "Welcome to BattleWords!" }}
+        </h3>
+        <p class="text-gray-600 dark:text-gray-300 mb-6">
+          {{
+            store.battles.length
+              ? "You have battles but no words yet."
+              : "It looks like you don't have any battles yet."
+          }}
+          Would you like to add sample words from the Battle of Yarmouk?
+        </p>
+        <Button
+          label="Add Sample Battle"
+          icon="pi pi-plus"
+          @click="addSampleBattle"
+          :loading="loading"
+          class="p-button-primary"
+        />
+      </div>
+    </div>
+
+    <!-- Word List -->
+    <div v-else>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <TransitionGroup name="list">
+          <WordCard
+            v-for="(word, index) in filteredWords"
+            :key="word.id || index"
+            :word="word"
+          />
+        </TransitionGroup>
+      </div>
+
+      <!-- Load More Button -->
+      <div v-if="!selectedBattle" class="flex justify-center mt-8">
         <Button
           @click="store.loadMore"
           :loading="store.loadingMore"
           class="p-button-outlined"
+          :disabled="store.loadingMore"
         >
-          Load More
+          <Loader2 v-if="store.loadingMore" :size="16" class="mr-2 animate-spin" />
+          {{ store.loadingMore ? "Loading..." : "Load More" }}
         </Button>
       </div>
     </div>
@@ -88,6 +130,7 @@ import Button from "primevue/button";
 import WordCard from "./WordCard.vue";
 import { useWordStore } from "../store/wordStore";
 import { deleteAllWords } from "../services/dbService";
+import { BookOpen, Loader2, Swords, Trash2 } from "lucide-vue-next";
 
 const store = useWordStore();
 const selectedBattle = ref<{ name: string; code: string } | null>(null);
@@ -191,6 +234,21 @@ onMounted(async () => {
 
 <style scoped>
 .p-button {
-  @apply px-4 py-2 rounded-lg;
+  @apply px-4 py-2 rounded-lg transition-all duration-200;
+}
+
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.3s ease;
+}
+
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.list-move {
+  transition: transform 0.3s ease;
 }
 </style>
