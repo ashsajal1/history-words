@@ -1,12 +1,12 @@
 <template>
   <nav class="flex items-center justify-between p-4 border-b dark:border-b-gray-700">
-    <div class="flex items-center gap-4">
-      <Button size="small" class="lg:hidden" @click="isSidebarOpen = !isSidebarOpen">
-        <Menu :size="20" />
-      </Button>
+    <div class="flex items-center justify-between w-full">
       <RouterLink to="/" class="text-2xl font-bold select-none cursor-pointer"
         >BattleWords</RouterLink
       >
+      <Button size="small" class="lg:hidden" @click="isSidebarOpen = !isSidebarOpen">
+        <Menu :size="20" />
+      </Button>
     </div>
 
     <!-- Desktop Navigation -->
@@ -39,7 +39,10 @@
     ></div>
     <div
       class="fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-800 shadow-lg transform transition-transform duration-300 ease-in-out z-50 lg:hidden"
-      :class="{ 'translate-x-0': isSidebarOpen, '-translate-x-full': !isSidebarOpen }"
+      :class="{
+        'translate-x-0': isSidebarOpen,
+        '-translate-x-full': !isSidebarOpen,
+      }"
     >
       <div class="p-4 flex flex-col gap-4">
         <div class="flex justify-between items-center">
