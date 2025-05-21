@@ -1,24 +1,27 @@
 <template>
-  <nav
-    class="flex items-center justify-between p-4 border-b dark:border-b-gray-700"
-  >
+  <nav class="flex items-center justify-between p-4 border-b dark:border-b-gray-700">
     <RouterLink to="/" class="text-2xl font-bold select-none cursor-pointer"
       >BattleWords</RouterLink
     >
 
     <div class="flex items-center justify-between gap-2">
+      <RouterLink to="/quiz">
+        <Button size="small" class="p-button-outlined">
+          <Brain :size="16" stroke-width="1.5" class="mr-1" />Quiz
+        </Button>
+      </RouterLink>
       <Button size="small" rounded variant="outlined" @click="next()">
         <SunDim :size="20" v-if="mode === 'dark'" />
         <Moon :size="20" v-if="mode === 'light'" />
         <MonitorDot :size="16" v-if="mode === 'auto'" />{{ mode }}
       </Button>
       <RouterLink to="/settings">
-        <Button size="small"
-          ><Settings stroke-width="1.5" :size="20"
-        /></Button>
+        <Button size="small"><Settings stroke-width="1.5" :size="20" /></Button>
       </RouterLink>
       <RouterLink to="/import">
-        <Button size="small"><BookPlus :size="16" stroke-width="1.5" />Import json</Button>
+        <Button size="small"
+          ><BookPlus :size="16" stroke-width="1.5" />Import json</Button
+        >
       </RouterLink>
     </div>
   </nav>
@@ -28,7 +31,7 @@
 import { useColorMode, useCycleList } from "@vueuse/core";
 import { Button } from "primevue";
 import { watchEffect } from "vue";
-import { SunDim, Moon, MonitorDot, Settings, BookPlus } from "lucide-vue-next";
+import { SunDim, Moon, MonitorDot, Settings, BookPlus, Brain } from "lucide-vue-next";
 
 const mode = useColorMode({
   emitAuto: true,
