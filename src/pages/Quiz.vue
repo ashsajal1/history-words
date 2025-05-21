@@ -1,8 +1,8 @@
 <template>
-  <div class="container mx-auto p-4">
+  <div class="container mx-auto p-4 max-w-3xl">
     <!-- Battle Selection -->
     <div class="mb-8">
-      <h2 class="text-2xl font-bold mb-4">Select a Battle</h2>
+      <h2 class="text-2xl font-bold mb-4 dark:text-white">Select a Battle</h2>
       <Dropdown
         v-model="selectedBattle"
         :options="wordStore.battles"
@@ -10,45 +10,89 @@
         placeholder="Select a Battle"
         class="w-full md:w-14rem"
         @change="handleBattleChange"
-      />
+      >
+        <template #value="slotProps">
+          <div v-if="slotProps.value" class="flex items-center gap-2">
+            <Swords :size="16" class="text-gray-500" />
+            <span>{{ slotProps.value.name }}</span>
+          </div>
+          <span v-else>{{ slotProps.placeholder }}</span>
+        </template>
+        <template #option="slotProps">
+          <div class="flex items-center gap-2">
+            <Swords :size="16" class="text-gray-500" />
+            <span>{{ slotProps.option.name }}</span>
+          </div>
+        </template>
+      </Dropdown>
     </div>
 
     <!-- Quiz Section -->
     <div
       v-if="currentQuestion"
-      class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6"
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-all duration-300"
     >
-      <div class="mb-4">
-        <span class="text-sm text-gray-500"
-          >Question {{ currentQuestionIndex + 1 }} of {{ questions.length }}</span
-        >
+      <!-- Progress Bar -->
+      <div class="mb-6">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-sm text-gray-500 dark:text-gray-400">
+            Question {{ currentQuestionIndex + 1 }} of {{ questions.length }}
+          </span>
+          <span class="text-sm font-medium text-primary-500"> Score: {{ score }} </span>
+        </div>
+        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+          <div
+            class="bg-primary-500 h-2 rounded-full transition-all duration-300"
+            :style="{
+              width: `${((currentQuestionIndex + 1) / questions.length) * 100}%`,
+            }"
+          ></div>
+        </div>
       </div>
 
-      <div class="mb-6">
-        <h3 class="text-xl font-semibold mb-2">What is the meaning of:</h3>
-        <p class="text-2xl font-bold text-primary">{{ currentQuestion.en }}</p>
+      <div class="mb-8">
+        <h3 class="text-xl font-semibold mb-2 dark:text-white">
+          What is the meaning of:
+        </h3>
+        <p class="text-2xl font-bold text-primary-500 dark:text-primary-400">
+          {{ currentQuestion.en }}
+        </p>
       </div>
 
       <div class="space-y-3">
         <div
           v-for="(option, index) in currentOptions"
           :key="index"
-          class="p-4 border rounded-lg cursor-pointer transition-colors"
+          class="p-4 border rounded-lg cursor-pointer transition-all duration-200"
           :class="{
-            'hover:bg-gray-50 dark:hover:bg-gray-700': !selectedAnswer,
-            'bg-primary-100 border-primary': selectedAnswer === option,
-            'bg-red-100 border-red-500 text-gray-700':
-              selectedAnswer === option && selectedAnswer !== currentQuestion.bn,
-            'bg-green-100 border-green-500 text-gray-700':
+            'hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-700': !selectedAnswer,
+            'bg-primary-50 dark:bg-primary-900/20 border-primary-500':
               selectedAnswer === option && selectedAnswer === currentQuestion.bn,
+            'bg-red-50 dark:bg-red-900/20 border-red-500':
+              selectedAnswer === option && selectedAnswer !== currentQuestion.bn,
+            'opacity-50 cursor-not-allowed': selectedAnswer && selectedAnswer !== option,
           }"
           @click="selectAnswer(option)"
         >
-          {{ option }}
+          <div class="flex items-center gap-3">
+            <div
+              class="w-6 h-6 rounded-full border-2 flex items-center justify-center"
+              :class="{
+                'border-gray-300 dark:border-gray-600': !selectedAnswer,
+                'border-primary-500 bg-primary-500':
+                  selectedAnswer === option && selectedAnswer === currentQuestion.bn,
+                'border-red-500 bg-red-500':
+                  selectedAnswer === option && selectedAnswer !== currentQuestion.bn,
+              }"
+            >
+              <Check v-if="selectedAnswer === option" :size="14" class="text-white" />
+            </div>
+            <span class="text-gray-700 dark:text-gray-200">{{ option }}</span>
+          </div>
         </div>
       </div>
 
-      <div class="mt-6 flex justify-between">
+      <div class="mt-8 flex justify-between">
         <Button
           label="Previous"
           icon="pi pi-arrow-left"
@@ -62,15 +106,34 @@
           iconPos="right"
           @click="nextQuestion"
           :disabled="!selectedAnswer"
+          class="p-button-primary"
         />
       </div>
     </div>
 
     <!-- Results Section -->
-    <div v-if="showResults" class="bg-white rounded-lg shadow-lg p-6">
-      <h2 class="text-2xl font-bold mb-4">Quiz Results</h2>
-      <p class="text-xl mb-4">Score: {{ score }} / {{ questions.length }}</p>
-      <Button label="Restart Quiz" @click="restartQuiz" class="p-button-primary" />
+    <div
+      v-if="showResults"
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center"
+    >
+      <div class="mb-6">
+        <Trophy :size="48" class="mx-auto mb-4 text-primary-500" />
+        <h2 class="text-2xl font-bold mb-2 dark:text-white">Quiz Results</h2>
+        <p class="text-xl mb-4 text-gray-600 dark:text-gray-300">
+          You scored {{ score }} out of {{ questions.length }}
+        </p>
+        <div class="text-4xl font-bold text-primary-500 mb-6">
+          {{ Math.round((score / questions.length) * 100) }}%
+        </div>
+      </div>
+      <div class="space-y-3">
+        <Button label="Restart Quiz" @click="restartQuiz" class="p-button-primary" />
+        <Button
+          label="Try Another Battle"
+          @click="selectedBattle = null"
+          class="p-button-outlined"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -80,6 +143,7 @@ import { ref, computed, onMounted } from "vue";
 import { useWordStore } from "../store/wordStore";
 import Button from "primevue/button";
 import Dropdown from "primevue/dropdown";
+import { Check, Swords, Trophy } from "lucide-vue-next";
 
 interface Word {
   id?: number;
@@ -205,10 +269,39 @@ onMounted(async () => {
 
 <style scoped>
 .p-button {
-  @apply px-4 py-2 rounded-lg;
+  @apply px-4 py-2 rounded-lg transition-all duration-200;
 }
 
 .p-dropdown {
   @apply w-full;
+}
+
+.p-dropdown-panel {
+  @apply dark:bg-gray-800 dark:border-gray-700;
+}
+
+.p-dropdown-item {
+  @apply dark:text-gray-200 dark:hover:bg-gray-700;
+}
+
+.p-dropdown-item.p-highlight {
+  @apply dark:bg-primary-900/20;
+}
+
+/* Custom scrollbar for dark mode */
+.dark ::-webkit-scrollbar {
+  @apply w-2;
+}
+
+.dark ::-webkit-scrollbar-track {
+  @apply bg-gray-800;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  @apply bg-gray-600 rounded-full;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-500;
 }
 </style>
