@@ -4,6 +4,8 @@ import {
   getWordsByPage,
   getAllBattles,
   deleteDuplicateWords,
+  saveToIndexedDB,
+  saveBattle,
 } from "../services/dbService";
 
 interface Word {
@@ -172,6 +174,20 @@ export const useWordStore = defineStore("words", () => {
     selectedBattle.value = null;
   };
 
+  const addWord = async (word: Word) => {
+    try {
+      // First ensure the battle exists
+      await saveBattle(word.battle);
+      // Then save the word
+      await saveToIndexedDB([word]);
+      // Reload the current view
+      await loadWords();
+    } catch (error) {
+      console.error("Error adding word:", error);
+      throw error;
+    }
+  };
+
   return {
     // State
     words,
@@ -195,5 +211,6 @@ export const useWordStore = defineStore("words", () => {
     deleteDuplicates,
     selectBattle,
     reset,
+    addWord,
   };
 });
