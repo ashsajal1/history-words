@@ -108,7 +108,7 @@
       </div>
 
       <!-- Load More Button -->
-      <div v-if="!selectedBattle" class="flex justify-center mt-8">
+      <div v-if="store.hasMore" class="flex justify-center mt-8">
         <Button
           @click="store.loadMore"
           :loading="store.loadingMore"
@@ -146,7 +146,7 @@ const filteredWords = computed(() => {
 
 const handleBattleChange = (battle: { name: string; code: string } | null) => {
   selectedBattle.value = battle;
-  store.selectBattle(battle);
+  store.selectBattle(battle ? { name: battle.name } : null);
 };
 
 const handleDeleteDuplicates = async () => {
